@@ -10,17 +10,122 @@
         
         body { 
             font-family: 'Press Start 2P', cursive; 
-            text-align: center; 
-            background-color: #5D9BFF;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-            background-image: 
-                linear-gradient(to bottom, #5D9BFF 0%, #5D9BFF 70%, #5CE05C 70%, #5CE05C 100%);
-        }
-        
+        text-align: center; 
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+        background-color: #5D9BFF;
+        background-image: 
+            /* Sky gradient */
+            linear-gradient(to bottom, #5D9BFF 0%, #5D9BFF 70%, #5CE05C 70%, #5CE05C 100%),
+            /* Distant clouds */
+            url('https://i.imgur.com/3Q3Q3Q3.png'),
+            /* Floating coins */
+            url('https://i.imgur.com/5RM3o4R.png');
+        background-size: 
+            100% 100%,
+            200px 100px,
+            30px 30px;
+        background-repeat: 
+            no-repeat,
+            repeat-x,
+            repeat;
+        background-position: 
+            0 0,
+            0 20%,
+            0 0;
+    }
+    .game-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+        overflow: hidden;
+    }
+    
+    .brick-wall {
+        position: absolute;
+        bottom: 100px;
+        left: 0;
+        width: 100%;
+        height: 200px;
+        background-image: 
+            url('https://i.imgur.com/8Z7WzQq.png'),
+            url('https://i.imgur.com/XW3q3Wj.png');
+        background-size: 50px 50px, 100px 60px;
+        background-repeat: repeat-x;
+        background-position: bottom left, bottom right;
+    }
+    
+    .ladder {
+        position: absolute;
+        width: 40px;
+        height: 120px;
+        background-image: url('https://i.imgur.com/ladder.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+    
+    .ladder-1 {
+        right: 20%;
+        bottom: 220px;
+    }
+    
+    .ladder-2 {
+        left: 15%;
+        bottom: 180px;
+        transform: rotate(5deg);
+    }
+    
+    .floating-platform {
+        position: absolute;
+        width: 150px;
+        height: 30px;
+        background-image: url('https://i.imgur.com/platform.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+    
+    .platform-1 {
+        right: 10%;
+        top: 30%;
+    }
+    
+    .platform-2 {
+        left: 10%;
+        top: 50%;
+    }
+    
+    .question-block {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background-image: url('https://i.imgur.com/question-block.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        animation: bounce 0.5s infinite alternate;
+    }
+    
+    .block-1 {
+        left: 25%;
+        bottom: 220px;
+    }
+    
+    .block-2 {
+        right: 30%;
+        bottom: 250px;
+    }
+    
+    @keyframes bounce {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-5px); }
+    }
+    
         h2 {
             color: #E52521;
             text-shadow: 4px 4px 0px #000;
@@ -269,7 +374,6 @@
     </style>
 </head>
 <body>
-    <!-- Background elements -->
     <div class="ground"></div>
     
     <div class="bush" style="left: 10%;"></div>
@@ -278,7 +382,6 @@
     <div class="bush" style="right: 30%;"></div>
     <div class="brick" style="right: 5%;"></div>
     
-    <!-- Floating items -->
     <div class="mushroom" style="left: 15%; top: 60%;"></div>
     <div class="star" style="right: 20%; top: 50%;"></div>
     <div class="coin" style="left: 30%; top: 30%;"></div>
@@ -317,14 +420,13 @@ RESPONSE RULES:
 5. Keep responses short (1-2 sentences max)
 6. For unrelated questions: "MAMMA MIA! I ONLY KNOW ABOUT TECHFEST 2025!"`;
 
-    // Enhanced response mapping with common typos and phonetic patterns
     const responseMatrix = {
         time: {
             triggers: ["time", "when", "hour", "schedule", "timing", "start", "end"],
             patterns: [
-                /t[i1!]m[e3]/i, // Matches "time", "t1me", "t!me"
-                /wh[e3]n?/i,    // Matches "when", "wh3n", "wen"
-                /h[o0]ur/i,    // Matches "hour", "h0ur"
+                /t[i1!]m[e3]/i, 
+                /wh[e3]n?/i,    
+                /h[o0]ur/i,   
                 /sch[e3]d[u!]l/i
             ],
             response: "WAHOO! HACK O RELAY RUNS FROM 10 AM TO 6 PM ON APRIL 30!"
@@ -394,11 +496,9 @@ RESPONSE RULES:
         }
     };
 
-    // Advanced matching with phonetic similarity
     function findBestMatch(userInput) {
         const cleanInput = userInput.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-        
-        // 1. Check for exact matches first
+
         for (const [category, data] of Object.entries(responseMatrix)) {
             for (const trigger of data.triggers) {
                 if (new RegExp(`\\b${trigger}\\b`, 'i').test(userInput)) {
@@ -406,8 +506,7 @@ RESPONSE RULES:
                 }
             }
         }
-        
-        // 2. Check pattern matches with typo tolerance
+
         for (const [category, data] of Object.entries(responseMatrix)) {
             for (const pattern of data.patterns) {
                 if (pattern.test(userInput)) {
@@ -416,7 +515,6 @@ RESPONSE RULES:
             }
         }
         
-        // 3. Phonetic similarity matching
         const soundex = (word) => {
             const mapping = {
                 a: 0, e: 0, i: 0, o: 0, u: 0, y: 0,
@@ -442,7 +540,6 @@ RESPONSE RULES:
             return (code + '000').substring(0, 4);
         };
         
-        // 4. Question analysis
         const questionWords = {
             when: 'time',
             where: 'location',
@@ -451,7 +548,6 @@ RESPONSE RULES:
             how: 'register'
         };
         
-        // Check for question words
         for (const [word, category] of Object.entries(questionWords)) {
             if (new RegExp(`\\b${word}\\b`, 'i').test(userInput)) {
                 return responseMatrix[category].response;
@@ -462,11 +558,9 @@ RESPONSE RULES:
     }
 
     async function getAIResponse(userInput) {
-        // 1. Try our advanced matching first
         const matchedResponse = findBestMatch(userInput);
         if (matchedResponse) return matchedResponse;
 
-        // 2. Fallback to AI with strict instructions
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
                 method: "POST",
@@ -518,7 +612,6 @@ RESPONSE RULES:
             if (userMessage) {
                 const chatBox = document.getElementById("chat-box");
                 
-                // Add user message
                 const userMsg = document.createElement("div");
                 userMsg.className = "message user-message";
                 userMsg.textContent = userMessage.toUpperCase();
@@ -526,15 +619,13 @@ RESPONSE RULES:
                 
                 inputField.value = "";
                 chatBox.scrollTop = chatBox.scrollHeight;
-                
-                // Add loading indicator
+ 
                 const loading = document.createElement("div");
                 loading.className = "message bot-message";
                 loading.innerHTML = '<div class="loading"><div></div><div></div><div></div><div></div></div>';
                 chatBox.appendChild(loading);
                 chatBox.scrollTop = chatBox.scrollHeight;
-                
-                // Get and display response
+
                 try {
                     const botResponse = await getAIResponse(userMessage);
                     
@@ -544,7 +635,6 @@ RESPONSE RULES:
                     botMsg.textContent = botResponse;
                     chatBox.appendChild(botMsg);
                     
-                    // Add coin effect
                     const coin = document.createElement("div");
                     coin.className = "coin";
                     coin.style.position = "absolute";
@@ -567,7 +657,7 @@ RESPONSE RULES:
         }
     }
 
-    // Initialize with welcome message
+
     window.onload = function() {
         setTimeout(() => {
             const chatBox = document.getElementById("chat-box");
