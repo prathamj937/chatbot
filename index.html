@@ -556,6 +556,9 @@ RESPONSE RULES:
         
         return null;
     }
+    function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     async function getAIResponse(userInput) {
         const matchedResponse = findBestMatch(userInput);
@@ -605,57 +608,82 @@ RESPONSE RULES:
     }
 
     async function handleKeyPress(event) {
-        if (event.key === "Enter") {
-            const inputField = document.getElementById("user-input");
-            const userMessage = inputField.value.trim();
+    if (event.key === "Enter") {
+        const inputField = document.getElementById("user-input");
+        const userMessage = inputField.value.trim();
+        
+        if (userMessage) {
+            const chatBox = document.getElementById("chat-box");
             
-            if (userMessage) {
-                const chatBox = document.getElementById("chat-box");
+            // Add user message
+            const userMsg = document.createElement("div");
+            userMsg.className = "message user-message";
+            userMsg.textContent = userMessage.toUpperCase();
+            chatBox.appendChild(userMsg);
+            
+            inputField.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // Add typing indicator
+            const typingIndicator = document.createElement("div");
+            typingIndicator.className = "message bot-message";
+            typingIndicator.textContent = "MARIO IS TYPING...";
+            chatBox.appendChild(typingIndicator);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // Animate the typing dots
+            const dots = [".", "..", "..."];
+            let dotCount = 0;
+            const typingAnimation = setInterval(() => {
+                dotCount = (dotCount + 1) % dots.length;
+                typingIndicator.textContent = "MARIO IS TYPING" + dots[dotCount];
+            }, 500);
+            
+            try {
+                // Get response but wait minimum 2 seconds before showing
+                const [botResponse] = await Promise.all([
+                    getAIResponse(userMessage),
+                    new Promise(resolve => setTimeout(resolve, 2000)) // Minimum 2 second delay
+                ]);
                 
-                const userMsg = document.createElement("div");
-                userMsg.className = "message user-message";
-                userMsg.textContent = userMessage.toUpperCase();
-                chatBox.appendChild(userMsg);
+                // Clear the typing animation
+                clearInterval(typingAnimation);
+                chatBox.removeChild(typingIndicator);
                 
-                inputField.value = "";
-                chatBox.scrollTop = chatBox.scrollHeight;
- 
-                const loading = document.createElement("div");
-                loading.className = "message bot-message";
-                loading.innerHTML = '<div class="loading"><div></div><div></div><div></div><div></div></div>';
-                chatBox.appendChild(loading);
-                chatBox.scrollTop = chatBox.scrollHeight;
-
-                try {
-                    const botResponse = await getAIResponse(userMessage);
-                    
-                    chatBox.removeChild(loading);
-                    const botMsg = document.createElement("div");
-                    botMsg.className = "message bot-message";
-                    botMsg.textContent = botResponse;
-                    chatBox.appendChild(botMsg);
-                    
-                    const coin = document.createElement("div");
-                    coin.className = "coin";
-                    coin.style.position = "absolute";
-                    coin.style.right = "20px";
-                    coin.style.bottom = "60px";
-                    document.querySelector(".chat-container").appendChild(coin);
-                    setTimeout(() => coin.remove(), 1500);
-                    
-                } catch (error) {
-                    console.error("Error:", error);
-                    chatBox.removeChild(loading);
-                    const errorMsg = document.createElement("div");
-                    errorMsg.className = "message bot-message";
-                    errorMsg.textContent = "MAMMA MIA! SOMETHING WENT WRONG!";
-                    chatBox.appendChild(errorMsg);
-                }
+                // Add random delay between 2-3 seconds total
+                const remainingDelay = Math.max(0, 3000 - 2000 - (botResponse ? 0 : 0));
+                await new Promise(resolve => setTimeout(resolve, remainingDelay));
                 
-                chatBox.scrollTop = chatBox.scrollHeight;
+                // Show response
+                const botMsg = document.createElement("div");
+                botMsg.className = "message bot-message";
+                botMsg.textContent = botResponse;
+                chatBox.appendChild(botMsg);
+                
+                // Add coin effect
+                const coin = document.createElement("div");
+                coin.className = "coin";
+                coin.style.position = "absolute";
+                coin.style.right = "20px";
+                coin.style.bottom = "60px";
+                document.querySelector(".chat-container").appendChild(coin);
+                setTimeout(() => coin.remove(), 1500);
+                
+            } catch (error) {
+                console.error("Error:", error);
+                clearInterval(typingAnimation);
+                chatBox.removeChild(typingIndicator);
+                
+                const errorMsg = document.createElement("div");
+                errorMsg.className = "message bot-message";
+                errorMsg.textContent = "MAMMA MIA! SOMETHING WENT WRONG!";
+                chatBox.appendChild(errorMsg);
             }
+            
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
     }
+}
 
 
     window.onload = function() {
