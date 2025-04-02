@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mario Event Chatbot</title>
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body { 
+            font-family: 'Press Start 2P', cursive; 
+            text-align: center; 
+            background-color: #5D9BFF;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            background-image: 
+                linear-gradient(to bottom, #5D9BFF 0%, #5D9BFF 70%, #5CE05C 70%, #5CE05C 100%);
+        }
+        
+        h2 {
+            color: #E52521;
+            text-shadow: 4px 4px 0px #000;
+            font-size: 2em;
+            margin: 20px 0 30px;
+            letter-spacing: 1px;
+        }
+        
+        .chat-container { 
+            width: 400px; 
+            margin: 0 auto 50px; 
+            border: 6px solid #E52521; 
+            padding: 15px; 
+            border-radius: 15px;
+            background-color: #FFD90F;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+        }
+        
+        .chat-container:before {
+            content: "";
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
+            border: 4px dashed #FFF;
+            border-radius: 25px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .chat-box { 
+            height: 350px; 
+            overflow-y: auto; 
+            border: 4px solid #E52521; 
+            padding: 15px; 
+            text-align: left;
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)),
+                url('https://i.imgur.com/8Z7WzQq.png');
+            background-size: 40px 40px;
+        }
+        
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin-top: 10px; 
+            border-radius: 8px; 
+            border: 4px solid #E52521;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            box-sizing: border-box;
+            background-color: #FFF8C6;
+        }
+        
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #FFD90F;
+        }
+        
+        .mario-icon {
+            width: 70px;
+            height: 70px;
+            background-image: url('https://i.imgur.com/4QtXe1E.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            position: absolute;
+            left: -35px;
+            top: -35px;
+            filter: drop-shadow(2px 2px 0px #000);
+        }
+        
+        .coin {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background-image: url('https://i.imgur.com/5RM3o4R.png');
+            background-size: contain;
+            animation: spin 1.5s linear infinite;
+            z-index: 5;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .message {
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            font-size: 12px;
+            line-height: 1.5;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+        }
+        
+        .user-message {
+            background-color: #E52521;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-message {
+            background-color: #5D9BFF;
+            color: white;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        /* Ground elements */
+        .ground {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background-color: #DDA600;
+            background-image: 
+                linear-gradient(transparent 60%, rgba(0,0,0,0.1) 60%),
+                url('https://i.imgur.com/XW3q3Wj.png');
+            background-size: 200px 100px;
+            z-index: 1;
+        }
+        
+        .brick {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-image: url('https://i.imgur.com/8Z7WzQq.png');
+            background-size: contain;
+            bottom: 100px;
+        }
+        
+        .bush {
+            position: absolute;
+            width: 100px;
+            height: 60px;
+            background-image: url('https://i.imgur.com/J1wZQ7h.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            bottom: 100px;
+            z-index: 2;
+        }
+        
+        .pipe {
+            position: absolute;
+            width: 80px;
+            height: 120px;
+            background-image: url('https://i.imgur.com/9Q9Q9Q9.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            bottom: 100px;
+            z-index: 2;
+        }
+        
+        .mushroom {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-image: url('https://i.imgur.com/5RM3o4R.png');
+            background-size: contain;
+            animation: float 3s ease-in-out infinite;
+            z-index: 5;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .star {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-image: url('https://i.imgur.com/9Q9Q9Q9.png');
+            background-size: contain;
+            animation: twinkle 2s infinite alternate, float 4s ease-in-out infinite;
+            z-index: 5;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 20px;
+        }
+        
+        .loading div {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #E52521;
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+        
+        .loading div:nth-child(1) {
+            left: 8px;
+            animation: loading1 0.6s infinite;
+        }
+        
+        .loading div:nth-child(2) {
+            left: 8px;
+            animation: loading2 0.6s infinite;
+        }
+        
+        .loading div:nth-child(3) {
+            left: 32px;
+            animation: loading2 0.6s infinite;
+        }
+        
+        .loading div:nth-child(4) {
+            left: 56px;
+            animation: loading3 0.6s infinite;
+        }
+        
+        @keyframes loading1 {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes loading2 {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(24px, 0); }
+        }
+        
+        @keyframes loading3 {
+            0% { transform: scale(1); }
+            100% { transform: scale(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background elements -->
+    <div class="ground"></div>
+    
+    <div class="bush" style="left: 10%;"></div>
+    <div class="brick" style="left: 25%;"></div>
+    <div class="pipe" style="right: 15%;"></div>
+    <div class="bush" style="right: 30%;"></div>
+    <div class="brick" style="right: 5%;"></div>
+    
+    <!-- Floating items -->
+    <div class="mushroom" style="left: 15%; top: 60%;"></div>
+    <div class="star" style="right: 20%; top: 50%;"></div>
+    <div class="coin" style="left: 30%; top: 30%;"></div>
+    <div class="coin" style="right: 25%; top: 40%;"></div>
+    
+    <h2>SUPER MARIO EVENT CHAT</h2>
+    <div class="chat-container">
+        <div class="mario-icon"></div>
+        <div class="coin" style="top: -15px; right: 20px;"></div>
+        <div class="coin" style="top: 15px; right: 45px;"></div>
+        <div class="chat-box" id="chat-box"></div>
+        <input type="text" id="user-input" placeholder="ASK ABOUT TECHFEST 2025..." onkeypress="handleKeyPress(event)">
+    </div>
+
+    <script>
+        const apiKey = "AIzaSyC1oNGdNdodbWuY6eKxVrzOf7ai-UM3vfw"; // 🔹 Replace with your Gemini API Key
+        
+        const systemPrompt = `You are Mario, the enthusiastic event assistant for TechFest 2025. 
+You MUST answer all questions using ONLY the following information in Mario's fun style:
+
+EVENT DETAILS (YOU MUST USE THESE EXACT FACTS):
+- Name: Hack O Relay
+- Date: April 30, 2025 (Wahoo!)
+- Location: XYZ 
+- Time: 10 AM to 6 PM (Let's-a go!)
+- Topics: AI, Blockchain, Web3
+- Speakers: pratham, ayush
+- Registration: abc.com
+- Contact: ppp@gmail.com
+
+RESPONSE RULES:
+1. BE EXTREMELY FORGIVING OF TYPOS (e.g., "spaker" = "speakers")
+2. MATCH INTENT OVER EXACT WORDING
+3. Always answer in ALL CAPS like Mario
+4. Use Mario phrases: "WAHOO!", "MAMMA MIA!", "LET'S-A GO!"
+5. Keep responses short (1-2 sentences max)
+6. For unrelated questions: "MAMMA MIA! I ONLY KNOW ABOUT TECHFEST 2025!"`;
+
+    // Enhanced response mapping with common typos and phonetic patterns
+    const responseMatrix = {
+        time: {
+            triggers: ["time", "when", "hour", "schedule", "timing", "start", "end"],
+            patterns: [
+                /t[i1!]m[e3]/i, // Matches "time", "t1me", "t!me"
+                /wh[e3]n?/i,    // Matches "when", "wh3n", "wen"
+                /h[o0]ur/i,    // Matches "hour", "h0ur"
+                /sch[e3]d[u!]l/i
+            ],
+            response: "WAHOO! HACK O RELAY RUNS FROM 10 AM TO 6 PM ON APRIL 30!"
+        },
+        date: {
+            triggers: ["date", "day", "april", "15th", "fifteenth"],
+            patterns: [
+                /d[4a]t[e3]/i,
+                /[4a]pr[i1]l/i,
+                /15(th)?/i,
+                /apr[i1]l 15/i
+            ],
+            response: "LET'S-A GO! THE EVENT IS ON APRIL 30, 2025!"
+        },
+        location: {
+            triggers: ["location", "where", "place", "address", "venue", "loc"],
+            patterns: [
+                /l[o0]c[4a][t7]i[o0]n/i,
+                /wh[e3]r[e3]/i,
+                /[4a]ddr[e3]ss/i,
+                /xyz con/i
+            ],
+            response: "IT'S-A AT XXX!"
+        },
+        speakers: {
+            triggers: ["speaker", "speakers", "presenter", "john", "jane"],
+            patterns: [
+                /sp[e3][4a]k[e3]r/i,
+                /pr[e3]s[e3]nt[e3]r/i,
+                /j[o0]hn/i,
+                /j[4a]n[e3]/i,
+                /who (talk|speak)/i
+            ],
+            response: "OUR SUPER SPEAKERS ARE PRATHAM AND AYUSH!"
+        },
+        topics: {
+            triggers: ["topic", "topics", "ai", "blockchain", "web3", "theme"],
+            patterns: [
+                /t[o0]p[i1]c/i,
+                /[4a][i1]/i,
+                /bl[o0]ckch[4a]in/i,
+                /w[e3]b3/i,
+                /what (about|for)/i
+            ],
+            response: "WAHOO! WE'RE COVERING AI, BLOCKCHAIN, AND WEB3!"
+        },
+        register: {
+            triggers: ["register", "registration", "signup", "ticket", "attend", "join"],
+            patterns: [
+                /r[e3]g[i1]st/i,
+                /s[i1]gn.?up/i,
+                /t[i1]ck[e3]t/i,
+                /[4a]tt[e3]nd/i,
+                /how (to|do) (join|register)/i
+            ],
+            response: "SIGN-UP AT ABC.COM! WAHOO!"
+        },
+        contact: {
+            triggers: ["contact", "email", "reach", "info", "help"],
+            patterns: [
+                /c[o0]nt[4a]ct/i,
+                /[e3]m[4a]il/i,
+                /r[e3][4a]ch/i,
+                /get (info|help)/i
+            ],
+            response: "EMAIL US AT PP@gmail.com!"
+        }
+    };
+
+    // Advanced matching with phonetic similarity
+    function findBestMatch(userInput) {
+        const cleanInput = userInput.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        
+        // 1. Check for exact matches first
+        for (const [category, data] of Object.entries(responseMatrix)) {
+            for (const trigger of data.triggers) {
+                if (new RegExp(`\\b${trigger}\\b`, 'i').test(userInput)) {
+                    return data.response;
+                }
+            }
+        }
+        
+        // 2. Check pattern matches with typo tolerance
+        for (const [category, data] of Object.entries(responseMatrix)) {
+            for (const pattern of data.patterns) {
+                if (pattern.test(userInput)) {
+                    return data.response;
+                }
+            }
+        }
+        
+        // 3. Phonetic similarity matching
+        const soundex = (word) => {
+            const mapping = {
+                a: 0, e: 0, i: 0, o: 0, u: 0, y: 0,
+                b: 1, f: 1, p: 1, v: 1,
+                c: 2, g: 2, j: 2, k: 2, q: 2, s: 2, x: 2, z: 2,
+                d: 3, t: 3,
+                l: 4,
+                m: 5, n: 5,
+                r: 6
+            };
+            
+            let code = word.charAt(0).toUpperCase();
+            let prev = mapping[word.charAt(0).toLowerCase()] || 0;
+            
+            for (let i = 1; i < word.length; i++) {
+                const curr = mapping[word.charAt(i)] || 0;
+                if (curr !== 0 && curr !== prev) {
+                    code += curr;
+                    prev = curr;
+                }
+            }
+            
+            return (code + '000').substring(0, 4);
+        };
+        
+        // 4. Question analysis
+        const questionWords = {
+            when: 'time',
+            where: 'location',
+            who: 'speakers',
+            what: 'topics',
+            how: 'register'
+        };
+        
+        // Check for question words
+        for (const [word, category] of Object.entries(questionWords)) {
+            if (new RegExp(`\\b${word}\\b`, 'i').test(userInput)) {
+                return responseMatrix[category].response;
+            }
+        }
+        
+        return null;
+    }
+
+    async function getAIResponse(userInput) {
+        // 1. Try our advanced matching first
+        const matchedResponse = findBestMatch(userInput);
+        if (matchedResponse) return matchedResponse;
+
+        // 2. Fallback to AI with strict instructions
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{
+                        role: "user",
+                        parts: [{ 
+                            text: `MARIO-STYLE TECHFEST 2025 FAQ BOT - STRICT RULES:
+                            ${systemPrompt}
+                            USER QUESTION: ${userInput}
+                            MUST: 
+                            - IGNORE ALL TYPOS
+                            - ANSWER IN ALL CAPS
+                            - USE MARIO PHRASES
+                            - MAX 2 SENTENCES
+                            - ONLY USE PROVIDED FACTS`
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.1,
+                        topP: 0.9,
+                        maxOutputTokens: 80,
+                        stopSequences: ["MAMMA MIA!"]
+                    },
+                    safetySettings: [
+                        {
+                            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                            threshold: "BLOCK_ONLY_HIGH"
+                        }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || 
+                   "WAHOO! VISIT TECHFEST2025.COM FOR DETAILS!";
+        } catch (error) {
+            console.error("API Error:", error);
+            return "MAMMA MIA! TRY AGAIN OR VISIT TECHFEST2025.COM!";
+        }
+    }
+
+    async function handleKeyPress(event) {
+        if (event.key === "Enter") {
+            const inputField = document.getElementById("user-input");
+            const userMessage = inputField.value.trim();
+            
+            if (userMessage) {
+                const chatBox = document.getElementById("chat-box");
+                
+                // Add user message
+                const userMsg = document.createElement("div");
+                userMsg.className = "message user-message";
+                userMsg.textContent = userMessage.toUpperCase();
+                chatBox.appendChild(userMsg);
+                
+                inputField.value = "";
+                chatBox.scrollTop = chatBox.scrollHeight;
+                
+                // Add loading indicator
+                const loading = document.createElement("div");
+                loading.className = "message bot-message";
+                loading.innerHTML = '<div class="loading"><div></div><div></div><div></div><div></div></div>';
+                chatBox.appendChild(loading);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                
+                // Get and display response
+                try {
+                    const botResponse = await getAIResponse(userMessage);
+                    
+                    chatBox.removeChild(loading);
+                    const botMsg = document.createElement("div");
+                    botMsg.className = "message bot-message";
+                    botMsg.textContent = botResponse;
+                    chatBox.appendChild(botMsg);
+                    
+                    // Add coin effect
+                    const coin = document.createElement("div");
+                    coin.className = "coin";
+                    coin.style.position = "absolute";
+                    coin.style.right = "20px";
+                    coin.style.bottom = "60px";
+                    document.querySelector(".chat-container").appendChild(coin);
+                    setTimeout(() => coin.remove(), 1500);
+                    
+                } catch (error) {
+                    console.error("Error:", error);
+                    chatBox.removeChild(loading);
+                    const errorMsg = document.createElement("div");
+                    errorMsg.className = "message bot-message";
+                    errorMsg.textContent = "MAMMA MIA! SOMETHING WENT WRONG!";
+                    chatBox.appendChild(errorMsg);
+                }
+                
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+    }
+
+    // Initialize with welcome message
+    window.onload = function() {
+        setTimeout(() => {
+            const chatBox = document.getElementById("chat-box");
+            const welcomeMsg = document.createElement("div");
+            welcomeMsg.className = "message bot-message";
+            welcomeMsg.textContent = "WAHOO! WELCOME TO TECHFEST 2025! ASK ME ABOUT: DATE, TIME, LOCATION, SPEAKERS, TOPICS, OR REGISTRATION!";
+            chatBox.appendChild(welcomeMsg);
+        }, 500);
+    };
+</script>
+    </script>
+</body>
+</html>
