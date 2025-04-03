@@ -397,305 +397,234 @@
     </div>
 
     <script>
-        const apiKey = "AIzaSyC1oNGdNdodbWuY6eKxVrzOf7ai-UM3vfw"; // 🔹 Replace with your Gemini API Key
-        
-        const systemPrompt = `You are Mario, the enthusiastic event assistant for TechFest 2025. 
-You MUST answer all questions using ONLY the following information in Mario's fun style:
-
-EVENT DETAILS (YOU MUST USE THESE EXACT FACTS):
-- Name: Hack O Relay
-- Date: April 30, 2025 (Wahoo!)
-- Location: XYZ 
-- Time: 10 AM to 6 PM (Let's-a go!)
-- Topics: AI, Blockchain, Web3
-- Speakers: pratham, ayush
-- Registration: abc.com
-- Contact: ppp@gmail.com
-
-RESPONSE RULES:
-1. BE EXTREMELY FORGIVING OF TYPOS (e.g., "spaker" = "speakers")
-2. MATCH INTENT OVER EXACT WORDING
-3. Always answer in ALL CAPS like Mario
-4. Use Mario phrases: "WAHOO!", "MAMMA MIA!", "LET'S-A GO!"
-5. Keep responses short (1-2 sentences max)
-6. For unrelated questions: "MAMMA MIA! I ONLY KNOW ABOUT TECHFEST 2025!"`;
-
-    const responseMatrix = {
-        time: {
-            triggers: ["time", "when", "hour", "schedule", "timing", "start", "end"],
-            patterns: [
-                /t[i1!]m[e3]/i, 
-                /wh[e3]n?/i,    
-                /h[o0]ur/i,   
-                /sch[e3]d[u!]l/i
+        // 🔹 EVENT DATABASE - All information must come from here
+        const EVENT_DATA = {
+            name: "Hack O Relay",
+            date: "April 30, 2025",
+            location: "XYZ Convention Center, Tech City",
+            time: "10:00 AM to 6:00 PM",
+            topics: ["Artificial Intelligence", "Blockchain", "Web3 Development"],
+            speakers: [
+                { name: "Pratham Sharma", expertise: "AI Research" },
+                { name: "Ayush Patel", expertise: "Blockchain Architect" }
             ],
-            response: "WAHOO! HACK O RELAY RUNS FROM 10 AM TO 6 PM ON APRIL 30!"
-        },
-        date: {
-            triggers: ["date", "day", "april", "15th", "fifteenth"],
-            patterns: [
-                /d[4a]t[e3]/i,
-                /[4a]pr[i1]l/i,
-                /15(th)?/i,
-                /apr[i1]l 15/i
-            ],
-            response: "LET'S-A GO! THE EVENT IS ON APRIL 30, 2025!"
-        },
-        location: {
-            triggers: ["location", "where", "place", "address", "venue", "loc"],
-            patterns: [
-                /l[o0]c[4a][t7]i[o0]n/i,
-                /wh[e3]r[e3]/i,
-                /[4a]ddr[e3]ss/i,
-                /xyz con/i
-            ],
-            response: "IT'S-A AT XXX!"
-        },
-        speakers: {
-            triggers: ["speaker", "speakers", "presenter", "john", "jane"],
-            patterns: [
-                /sp[e3][4a]k[e3]r/i,
-                /pr[e3]s[e3]nt[e3]r/i,
-                /j[o0]hn/i,
-                /j[4a]n[e3]/i,
-                /who (talk|speak)/i
-            ],
-            response: "OUR SUPER SPEAKERS ARE PRATHAM AND AYUSH!"
-        },
-        topics: {
-            triggers: ["topic", "topics", "ai", "blockchain", "web3", "theme"],
-            patterns: [
-                /t[o0]p[i1]c/i,
-                /[4a][i1]/i,
-                /bl[o0]ckch[4a]in/i,
-                /w[e3]b3/i,
-                /what (about|for)/i
-            ],
-            response: "WAHOO! WE'RE COVERING AI, BLOCKCHAIN, AND WEB3!"
-        },
-        register: {
-            triggers: ["register", "registration", "signup", "ticket", "attend", "join"],
-            patterns: [
-                /r[e3]g[i1]st/i,
-                /s[i1]gn.?up/i,
-                /t[i1]ck[e3]t/i,
-                /[4a]tt[e3]nd/i,
-                /how (to|do) (join|register)/i
-            ],
-            response: "SIGN-UP AT ABC.COM! WAHOO!"
-        },
-        contact: {
-            triggers: ["contact", "email", "reach", "info", "help"],
-            patterns: [
-                /c[o0]nt[4a]ct/i,
-                /[e3]m[4a]il/i,
-                /r[e3][4a]ch/i,
-                /get (info|help)/i
-            ],
-            response: "EMAIL US AT PP@gmail.com!"
+            registration: {
+                url: "https://abc.com/techfest2025",
+                deadline: "April 25, 2025"
+            },
+            contact: {
+                email: "techfest2025@xyz.org",
+                phone: "+1 (555) 123-4567"
+            },
+            schedule: [
+                { time: "10:00 AM", event: "Opening Ceremony" },
+                { time: "11:00 AM", event: "Keynote: Future of AI" },
+                { time: "2:00 PM", event: "Blockchain Workshop" },
+                { time: "4:30 PM", event: "Web3 Panel Discussion" }
+            ]
+        };
+    
+        // 🔹 MARIO RESPONSE TEMPLATES
+        const MARIO_TEMPLATES = {
+            greeting: "WAHOO! WELCOME TO ${name}! ASK ME ABOUT: DATE, TIME, LOCATION, SPEAKERS, TOPICS, OR REGISTRATION!",
+            fallback: "MAMMA MIA! I ONLY KNOW ABOUT ${name}! TRY ASKING ABOUT: DATE, TIME, LOCATION, SPEAKERS, OR TOPICS!",
+            date: "LET'S-A GO! ${name} IS ON ${date}!",
+            time: "WAHOO! THE EVENT RUNS FROM ${time}!",
+            location: "IT'S-A AT ${location}!",
+            topics: "WE'RE COVERING THESE SUPER TOPICS: ${topics.join(', ')}! WAHOO!",
+            speakers: "OUR STAR SPEAKERS ARE: ${speakers.map(s => s.name + ' (' + s.expertise + ')').join(' and ')}!",
+            registration: "SIGN-UP AT ${registration.url} BEFORE ${registration.deadline}!",
+            contact: "EMAIL US AT ${contact.email} OR CALL ${contact.phone}!",
+            schedule: "HERE'S-A THE SCHEDULE: ${schedule.map(e => e.time + ' - ' + e.event).join(', ')}!"
+        };
+    
+        // 🔹 ADVANCED INTENT RECOGNITION SYSTEM
+        const INTENT_MATCHERS = [
+            {
+                intent: "date",
+                patterns: [/date/i, /when/i, /day/i, /apr[i1]l/i, /30(th)?/i],
+                extractor: (text) => text.match(/(what|when).*(date|day)/i)
+            },
+            {
+                intent: "time",
+                patterns: [/time/i, /hour/i, /when/i, /start/i, /end/i, /10am/i, /6pm/i],
+                extractor: (text) => text.match(/(what|when).*(time|start|end)/i)
+            },
+            {
+                intent: "location",
+                patterns: [/where/i, /location/i, /place/i, /address/i, /venue/i, /xyz/i],
+                extractor: (text) => text.match(/(where|location)/i)
+            },
+            {
+                intent: "topics",
+                patterns: [/topic/i, /theme/i, /about/i, /ai/i, /blockchain/i, /web3/i],
+                extractor: (text) => text.match(/(what).*(topic|about)/i)
+            },
+            {
+                intent: "speakers",
+                patterns: [/speaker/i, /presenter/i, /pratham/i, /ayush/i, /who/i],
+                extractor: (text) => text.match(/(who).*(speak|present)/i)
+            },
+            {
+                intent: "registration",
+                patterns: [/register/i, /sign.?up/i, /ticket/i, /join/i, /abc\.com/i],
+                extractor: (text) => text.match(/(how).*(register|join)/i)
+            },
+            {
+                intent: "contact",
+                patterns: [/contact/i, /email/i, /phone/i, /reach/i, /help/i],
+                extractor: (text) => text.match(/(how).*(contact|reach)/i)
+            },
+            {
+                intent: "schedule",
+                patterns: [/schedule/i, /agenda/i, /timeline/i, /plan/i],
+                extractor: (text) => text.match(/(what).*(schedule|agenda)/i)
+            }
+        ];
+    
+        // 🔹 ROBUST RESPONSE GENERATOR
+        function generateResponse(intent) {
+            // Handle unknown intents
+            if (!MARIO_TEMPLATES[intent]) {
+                return fillTemplate(MARIO_TEMPLATES.fallback);
+            }
+            
+            return fillTemplate(MARIO_TEMPLATES[intent]);
         }
-    };
-
-    function findBestMatch(userInput) {
-        const cleanInput = userInput.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-
-        for (const [category, data] of Object.entries(responseMatrix)) {
-            for (const trigger of data.triggers) {
-                if (new RegExp(`\\b${trigger}\\b`, 'i').test(userInput)) {
-                    return data.response;
+    
+        // 🔹 TEMPLATE FILLER WITH ERROR HANDLING
+        function fillTemplate(template) {
+            return template.replace(/\${([^}]+)}/g, (match, path) => {
+                try {
+                    return path.split('.').reduce((obj, key) => obj[key], EVENT_DATA);
+                } catch {
+                    return "OOPS-A!";
+                }
+            });
+        }
+    
+        // 🔹 ADVANCED INTENT DETECTION
+        function detectIntent(userInput) {
+            const cleanInput = userInput.toLowerCase().replace(/[^\w\s]/g, '');
+            
+            // 1. Check for exact pattern matches
+            for (const matcher of INTENT_MATCHERS) {
+                if (matcher.patterns.some(pattern => pattern.test(cleanInput))) {
+                    return matcher.intent;
                 }
             }
-        }
-
-        for (const [category, data] of Object.entries(responseMatrix)) {
-            for (const pattern of data.patterns) {
-                if (pattern.test(userInput)) {
-                    return data.response;
+            
+            // 2. Check with extractor functions
+            for (const matcher of INTENT_MATCHERS) {
+                if (matcher.extractor && matcher.extractor(cleanInput)) {
+                    return matcher.intent;
                 }
             }
-        }
-        
-        const soundex = (word) => {
-            const mapping = {
-                a: 0, e: 0, i: 0, o: 0, u: 0, y: 0,
-                b: 1, f: 1, p: 1, v: 1,
-                c: 2, g: 2, j: 2, k: 2, q: 2, s: 2, x: 2, z: 2,
-                d: 3, t: 3,
-                l: 4,
-                m: 5, n: 5,
-                r: 6
+            
+            // 3. Check for question words
+            const questionMap = {
+                when: "date",
+                where: "location",
+                who: "speakers",
+                what: ["topics", "schedule"],
+                how: ["registration", "contact"]
             };
             
-            let code = word.charAt(0).toUpperCase();
-            let prev = mapping[word.charAt(0).toLowerCase()] || 0;
-            
-            for (let i = 1; i < word.length; i++) {
-                const curr = mapping[word.charAt(i)] || 0;
-                if (curr !== 0 && curr !== prev) {
-                    code += curr;
-                    prev = curr;
+            for (const [word, intents] of Object.entries(questionMap)) {
+                if (new RegExp(`\\b${word}\\b`).test(cleanInput)) {
+                    return Array.isArray(intents) ? intents[0] : intents;
                 }
             }
             
-            return (code + '000').substring(0, 4);
-        };
-        
-        const questionWords = {
-            when: 'time',
-            where: 'location',
-            who: 'speakers',
-            what: 'topics',
-            how: 'register'
-        };
-        
-        for (const [word, category] of Object.entries(questionWords)) {
-            if (new RegExp(`\\b${word}\\b`, 'i').test(userInput)) {
-                return responseMatrix[category].response;
+            return null;
+        }
+    
+        // 🔹 MAIN CHAT HANDLER
+        async function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                const inputField = document.getElementById("user-input");
+                const userMessage = inputField.value.trim();
+                
+                if (userMessage) {
+                    const chatBox = document.getElementById("chat-box");
+                    
+                    // Add user message
+                    const userMsg = document.createElement("div");
+                    userMsg.className = "message user-message";
+                    userMsg.textContent = userMessage.toUpperCase();
+                    chatBox.appendChild(userMsg);
+                    
+                    inputField.value = "";
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    
+                    // Add typing indicator
+                    const typingIndicator = document.createElement("div");
+                    typingIndicator.className = "message bot-message";
+                    typingIndicator.textContent = "MARIO IS TYPING...";
+                    chatBox.appendChild(typingIndicator);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    
+                    // Animate typing
+                    const dots = [".", "..", "..."];
+                    let dotCount = 0;
+                    const typingAnimation = setInterval(() => {
+                        dotCount = (dotCount + 1) % dots.length;
+                        typingIndicator.textContent = "MARIO IS TYPING" + dots[dotCount];
+                    }, 500);
+                    
+                    try {
+                        // Simulate processing delay
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        
+                        // Detect intent
+                        const intent = detectIntent(userMessage);
+                        const botResponse = intent ? generateResponse(intent) : generateResponse('fallback');
+                        
+                        // Clear typing animation
+                        clearInterval(typingAnimation);
+                        chatBox.removeChild(typingIndicator);
+                        
+                        // Add response
+                        const botMsg = document.createElement("div");
+                        botMsg.className = "message bot-message";
+                        botMsg.textContent = botResponse;
+                        chatBox.appendChild(botMsg);
+                        
+                        // Add coin effect
+                        const coin = document.createElement("div");
+                        coin.className = "coin";
+                        coin.style.position = "absolute";
+                        coin.style.right = "20px";
+                        coin.style.bottom = "60px";
+                        document.querySelector(".chat-container").appendChild(coin);
+                        setTimeout(() => coin.remove(), 1500);
+                        
+                    } catch (error) {
+                        console.error("Error:", error);
+                        clearInterval(typingAnimation);
+                        chatBox.removeChild(typingIndicator);
+                        
+                        const errorMsg = document.createElement("div");
+                        errorMsg.className = "message bot-message";
+                        errorMsg.textContent = "MAMMA MIA! SOMETHING WENT WRONG!";
+                        chatBox.appendChild(errorMsg);
+                    }
+                    
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
             }
         }
-        
-        return null;
-    }
-    function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async function getAIResponse(userInput) {
-        const matchedResponse = findBestMatch(userInput);
-        if (matchedResponse) return matchedResponse;
-
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{
-                        role: "user",
-                        parts: [{ 
-                            text: `MARIO-STYLE TECHFEST 2025 FAQ BOT - STRICT RULES:
-                            ${systemPrompt}
-                            USER QUESTION: ${userInput}
-                            MUST: 
-                            - IGNORE ALL TYPOS
-                            - ANSWER IN ALL CAPS
-                            - USE MARIO PHRASES
-                            - MAX 2 SENTENCES
-                            - ONLY USE PROVIDED FACTS`
-                        }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.1,
-                        topP: 0.9,
-                        maxOutputTokens: 80,
-                        stopSequences: ["MAMMA MIA!"]
-                    },
-                    safetySettings: [
-                        {
-                            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-                            threshold: "BLOCK_ONLY_HIGH"
-                        }
-                    ]
-                })
-            });
-
-            const data = await response.json();
-            return data.candidates?.[0]?.content?.parts?.[0]?.text || 
-                   "WAHOO! VISIT TECHFEST2025.COM FOR DETAILS!";
-        } catch (error) {
-            console.error("API Error:", error);
-            return "MAMMA MIA! TRY AGAIN OR VISIT TECHFEST2025.COM!";
-        }
-    }
-
-    async function handleKeyPress(event) {
-    if (event.key === "Enter") {
-        const inputField = document.getElementById("user-input");
-        const userMessage = inputField.value.trim();
-        
-        if (userMessage) {
-            const chatBox = document.getElementById("chat-box");
-            
-            // Add user message
-            const userMsg = document.createElement("div");
-            userMsg.className = "message user-message";
-            userMsg.textContent = userMessage.toUpperCase();
-            chatBox.appendChild(userMsg);
-            
-            inputField.value = "";
-            chatBox.scrollTop = chatBox.scrollHeight;
-            
-            // Add typing indicator
-            const typingIndicator = document.createElement("div");
-            typingIndicator.className = "message bot-message";
-            typingIndicator.textContent = "MARIO IS TYPING...";
-            chatBox.appendChild(typingIndicator);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            
-            // Animate the typing dots
-            const dots = [".", "..", "..."];
-            let dotCount = 0;
-            const typingAnimation = setInterval(() => {
-                dotCount = (dotCount + 1) % dots.length;
-                typingIndicator.textContent = "MARIO IS TYPING" + dots[dotCount];
+    
+        // Initialize chat
+        window.onload = function() {
+            setTimeout(() => {
+                const chatBox = document.getElementById("chat-box");
+                const welcomeMsg = document.createElement("div");
+                welcomeMsg.className = "message bot-message";
+                welcomeMsg.textContent = fillTemplate(MARIO_TEMPLATES.greeting);
+                chatBox.appendChild(welcomeMsg);
             }, 500);
-            
-            try {
-                // Get response but wait minimum 2 seconds before showing
-                const [botResponse] = await Promise.all([
-                    getAIResponse(userMessage),
-                    new Promise(resolve => setTimeout(resolve, 2000)) // Minimum 2 second delay
-                ]);
-                
-                // Clear the typing animation
-                clearInterval(typingAnimation);
-                chatBox.removeChild(typingIndicator);
-                
-                // Add random delay between 2-3 seconds total
-                const remainingDelay = Math.max(0, 3000 - 2000 - (botResponse ? 0 : 0));
-                await new Promise(resolve => setTimeout(resolve, remainingDelay));
-                
-                // Show response
-                const botMsg = document.createElement("div");
-                botMsg.className = "message bot-message";
-                botMsg.textContent = botResponse;
-                chatBox.appendChild(botMsg);
-                
-                // Add coin effect
-                const coin = document.createElement("div");
-                coin.className = "coin";
-                coin.style.position = "absolute";
-                coin.style.right = "20px";
-                coin.style.bottom = "60px";
-                document.querySelector(".chat-container").appendChild(coin);
-                setTimeout(() => coin.remove(), 1500);
-                
-            } catch (error) {
-                console.error("Error:", error);
-                clearInterval(typingAnimation);
-                chatBox.removeChild(typingIndicator);
-                
-                const errorMsg = document.createElement("div");
-                errorMsg.className = "message bot-message";
-                errorMsg.textContent = "MAMMA MIA! SOMETHING WENT WRONG!";
-                chatBox.appendChild(errorMsg);
-            }
-            
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-    }
-}
-
-
-    window.onload = function() {
-        setTimeout(() => {
-            const chatBox = document.getElementById("chat-box");
-            const welcomeMsg = document.createElement("div");
-            welcomeMsg.className = "message bot-message";
-            welcomeMsg.textContent = "WAHOO! WELCOME TO TECHFEST 2025! ASK ME ABOUT: DATE, TIME, LOCATION, SPEAKERS, TOPICS, OR REGISTRATION!";
-            chatBox.appendChild(welcomeMsg);
-        }, 500);
-    };
-</script>
+        };
     </script>
 </body>
 </html>
